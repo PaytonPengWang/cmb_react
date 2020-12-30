@@ -1,37 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import './i18n/i18n';
+import _, { MapCache } from 'lodash';
+import LRUCache from 'lru-cache';
 
-import { Translation ,useTranslation,withTranslation, initReactI18next,Trans } from 'react-i18next';
+class LRCMapCache implements MapCache {
+    cache: any;
 
-function App() {
-  // const {t} = useTranslation()
-  var app ='home:app';
+    constructor(){
+        this.cache = new LRUCache({
+            max: 2000,
+            maxAge: 1000 * 60 * 5
+        });
+    }
 
-  return (
-    <Translation>
-      {
-        t => <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/{t(app)}.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-      }
-    
-    </Translation>
-  );
+    delete(key: any): boolean {
+        this.cache.del(key);
+        return true;
+    }
+    get(key: any) {
+        return this.cache.get(key);
+    }
+    has(key: any): boolean {
+        return this.cache.has(key);
+    }
+    set(key: any, value: any): this {
+        this.cache.set(key, value);
+        return this;
+    }
+    clear() {
+        this.cache.reset();
+    };
+
 }
 
-export default withTranslation()(App);
+_.memoize.Cache = LRCMapCache;
+
+export const memoize = _.memoize;
+
+export const cache = new LRCMapCache();
